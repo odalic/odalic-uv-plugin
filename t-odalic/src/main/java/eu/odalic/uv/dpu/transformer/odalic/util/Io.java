@@ -10,31 +10,41 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.charset.Charset;
 
+/**
+ * I/O utilities.
+ * 
+ * @author Václav Brodec
+ *
+ */
 public final class Io {
 
-    public static void fastCopy(final InputStream src, final OutputStream dest) throws IOException {
-        final ReadableByteChannel inputChannel = Channels.newChannel(src);
-        final WritableByteChannel outputChannel = Channels.newChannel(dest);
-        fastCopy(inputChannel, outputChannel);
-    }
+  private static final int BUFFER_SIZE = 16 * 1024;
+
+  public static void fastCopy(final InputStream source, final OutputStream destination) throws IOException {
+    final ReadableByteChannel inputChannel = Channels.newChannel(source);
+    final WritableByteChannel outputChannel = Channels.newChannel(destination);
     
-    public static void fastCopy(final ReadableByteChannel src, final WritableByteChannel dest) throws IOException {
-        final ByteBuffer buffer = ByteBuffer.allocateDirect(16 * 1024);
-        
-        while(src.read(buffer) != -1) {
-            buffer.flip();
-            dest.write(buffer);
-            buffer.compact();
-        }
-        
-        buffer.flip();
-        
-        while(buffer.hasRemaining()) {
-            dest.write(buffer);
-        }
+    fastCopy(inputChannel, outputChannel);
+  }
+
+  public static void fastCopy(final ReadableByteChannel source, final WritableByteChannel destination)
+      throws IOException {
+    final ByteBuffer buffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
+
+    while (source.read(buffer) != -1) {
+      buffer.flip();
+      destination.write(buffer);
+      buffer.compact();
     }
 
-    public static InputStream toStream(final String string, final Charset charset) {
-      return new ByteArrayInputStream(string.getBytes(charset));
+    buffer.flip();
+
+    while (buffer.hasRemaining()) {
+      destination.write(buffer);
     }
+  }
+
+  public static InputStream toStream(final String string, final Charset charset) {
+    return new ByteArrayInputStream(string.getBytes(charset));
+  }
 }

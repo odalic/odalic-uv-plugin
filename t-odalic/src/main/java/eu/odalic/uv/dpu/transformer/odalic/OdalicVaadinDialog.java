@@ -3,7 +3,10 @@ package eu.odalic.uv.dpu.transformer.odalic;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnsupportedCharsetException;
+
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -73,8 +76,8 @@ public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
 
     try {
       Charset.forName(this.charsetTextField.getValue());
-    } catch (final IllegalArgumentException e) {
-      throw new DPUConfigException(ctx.tr("Odalic.error.charset.unknown"), e);
+    } catch (final IllegalCharsetNameException | UnsupportedCharsetException e) {
+      throw new DPUConfigException(ctx.tr("Odalic.error.charset.invalid"), e);
     }
     c.setCharset(this.charsetTextField.getValue());
     
@@ -106,9 +109,10 @@ public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
     mainLayout.setHeight("-1px");
     mainLayout.setMargin(true);
 
+    mainLayout.addComponent(new Label(ctx.tr("Odalic.dialog.label")));
+
     this.tokenTextField = addTextField(mainLayout, ctx.tr("Odalic.dialog.token"));
     
-    mainLayout.addComponent(new Label(ctx.tr("Odalic.dialog.label")));
 
     final Upload upload =
         new Upload("Odalic task configuration file import", new Upload.Receiver() {
