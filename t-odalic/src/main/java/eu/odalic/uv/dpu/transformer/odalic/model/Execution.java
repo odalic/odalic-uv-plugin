@@ -5,7 +5,6 @@ package eu.odalic.uv.dpu.transformer.odalic.model;
 
 import java.io.Serializable;
 
-import javax.annotation.Nullable;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -28,7 +27,6 @@ public final class Execution implements Serializable {
    * @return the draft
    */
   @XmlElement
-  @Nullable
   public boolean isDraft() {
     return draft;
   }

@@ -5,7 +5,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nullable;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -33,7 +32,6 @@ public final class Message implements Serializable {
    * @return the text
    */
   @XmlElement
-  @Nullable
   public String getText() {
     return text;
   }
@@ -49,7 +47,6 @@ public final class Message implements Serializable {
    * @return the additional resources
    */
   @XmlElement
-  @Nullable
   public List<URI> getAdditionalResources() {
     return additionalResources;
   }
@@ -65,7 +62,6 @@ public final class Message implements Serializable {
    * @return the debug content
    */
   @XmlElement
-  @Nullable
   public String getDebugContent() {
     return debugContent;
   }
