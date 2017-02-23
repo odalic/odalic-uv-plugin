@@ -32,20 +32,21 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
 
-import org.eclipse.rdf4j.model.Model;
-import org.eclipse.rdf4j.model.Resource;
-import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.Value;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.rio.RDFFormat;
-import org.eclipse.rdf4j.rio.RDFParseException;
-import org.eclipse.rdf4j.rio.Rio;
 import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
+import org.openrdf.model.Model;
+import org.openrdf.model.Resource;
+import org.openrdf.model.Statement;
+import org.openrdf.model.Value;
+import org.openrdf.model.impl.ValueFactoryImpl;
+import org.openrdf.rio.RDFFormat;
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.RDFParseException;
+import org.openrdf.rio.Rio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,30 +65,29 @@ import eu.unifiedviews.helpers.dpu.exec.AbstractDpu;
 public class Odalic extends AbstractDpu<OdalicConfig_V1> {
 
   private static final MediaType CSV_MEDIA_TYPE = new MediaType("text", "csv");
-  private static final MediaType TURTLE_MEDIA_TYPE =
-      new MediaType("text", "turtle");
-  
+  private static final MediaType TURTLE_MEDIA_TYPE = new MediaType("text", "turtle");
+
   private static final String AUTHORIZATION_HEADER_KEY = "Authorization";
   private static final String AUTHORIZATION_HEADER_CONTENT_FORMAT = "Bearer %s";
-  
+
   private static final String WORKING_INPUT_FILE_FORMAT = "uv-odalic-input-%s.csv";
-    
-  private static final String TASK_CONFIGURATION_BASE_URI = "http://odalic.eu/internal/";  
+
+  private static final String TASK_CONFIGURATION_BASE_URI = "http://odalic.eu/internal/";
   private static final String TASK_ID_FORMAT = "uv-odalic-task-%s";
-  
+
   private static final int STATE_QUERY_INTERVAL_MILIS = 1500;
-  
+
   private static final String WORKING_OUTPUT_FILES_FORMAT = "uv-odalic-output-%s-%s.%s";
-  
+
   private static final String TURTLE_WORKING_OUTPUT_FILE_PREFIX = "turtle";
   private static final String TURTLE_WORKING_OUTPUT_FILE_SUFFIX = ".ttl";
-  
+
   private static final String EXTENDED_CSV_WORKING_OUTPUT_FILE_PREFIX = "extended-csv";
   private static final String EXTENDED_CSV_WORKING_OUTPUT_FILE_SUFFIX = ".csv";
-  
+
   private static final String WORKING_ANNOTATED_TABLE_OUTPUT_FILE_PREFIX = "annotated-table";
   private static final String WORKING_ANNOTATED_TABLE_OUTPUT_FILE_SUFFIX = ".json";
-  
+
   private static final Logger LOG = LoggerFactory.getLogger(Odalic.class);
 
   @DataUnit.AsInput(name = "input")
@@ -244,27 +244,32 @@ public class Odalic extends AbstractDpu<OdalicConfig_V1> {
     } catch (final IOException | RDFParseException e) {
       throw ContextUtils.dpuException(ctx, e, "Odalic.error.taskConfiguration.parsing");
     }
+    
     return model;
   }
 
   private Model injectFileIdentifier(final String injected, final Model taskConfigurationModel) {
     final Model inputSubmodel = taskConfigurationModel.filter((Resource) null,
-        SimpleValueFactory.getInstance().createIRI("http://odalic.eu/internal/Configuration/Input"),
+        ValueFactoryImpl.getInstance().createURI("http://odalic.eu/internal/Configuration/Input"),
         (Value) null);
     final Statement inputStatement = inputSubmodel.iterator().next();
 
     taskConfigurationModel.remove(inputStatement);
-    taskConfigurationModel.add(SimpleValueFactory.getInstance().createStatement(
+    taskConfigurationModel.add(ValueFactoryImpl.getInstance().createStatement(
         inputStatement.getSubject(), inputStatement.getPredicate(),
-        SimpleValueFactory.getInstance().createLiteral(injected), inputStatement.getContext()));
+        ValueFactoryImpl.getInstance().createLiteral(injected), inputStatement.getContext()));
 
     return taskConfigurationModel;
   }
 
-  private static String toTurtle(final Model model) {
+  private String toTurtle(final Model model) throws DPUException {
     final StringWriter stringWriter = new StringWriter();
-    Rio.write(model, stringWriter, RDFFormat.TURTLE);
-  
+    try {
+      Rio.write(model, stringWriter, RDFFormat.TURTLE);
+    } catch (final RDFHandlerException e) {
+      throw ContextUtils.dpuException(ctx, e, "Odalic.error.turtle.write");
+    }
+
     return stringWriter.toString();
   }
 
@@ -310,13 +315,13 @@ public class Odalic extends AbstractDpu<OdalicConfig_V1> {
         cancel(taskIdentifier, client);
         throw ContextUtils.dpuExceptionCancelled(ctx);
       }
-  
+
       try {
         Thread.sleep(STATE_QUERY_INTERVAL_MILIS);
       } catch (final InterruptedException e) {
         throw ContextUtils.dpuException(ctx, e, "Odalic.error.interrupted");
       }
-  
+
       state = getState(taskIdentifier, client);
     }
     return state;
@@ -324,7 +329,7 @@ public class Odalic extends AbstractDpu<OdalicConfig_V1> {
 
   private void cancel(final String taskIdentifier, final Client client) throws DPUException {
     final WebTarget target = getTasksTarget(client).path(taskIdentifier).path("execution");
-  
+
     final Response response;
     try {
       response = target.request().accept(MediaType.APPLICATION_JSON_TYPE)
@@ -332,7 +337,7 @@ public class Odalic extends AbstractDpu<OdalicConfig_V1> {
     } catch (final ProcessingException e) {
       throw ContextUtils.dpuException(ctx, e, "Odalic.error.execution.cancel.request");
     }
-  
+
     if (!isSuccessful(response)) {
       throw ContextUtils.dpuException(ctx, "Odalic.error.execution.cancel.success");
     }
@@ -388,43 +393,43 @@ public class Odalic extends AbstractDpu<OdalicConfig_V1> {
 
   private String[] getWarnings(String taskIdentifier, Client client) throws DPUException {
     final WebTarget target = getTasksTarget(client).path(taskIdentifier).path("result");
-  
+
     final Response response;
     try {
       response = target.request().accept(MediaType.APPLICATION_JSON_TYPE)
-        .header(AUTHORIZATION_HEADER_KEY, getAuthorizationHeaderContent()).get();
+          .header(AUTHORIZATION_HEADER_KEY, getAuthorizationHeaderContent()).get();
     } catch (final ProcessingException e) {
       throw ContextUtils.dpuException(ctx, e, "Odalic.error.result.request");
     }
-  
+
     final Result result;
     try {
       result = response.readEntity(Result.class);
     } catch (final ProcessingException e) {
       throw ContextUtils.dpuException(ctx, e, "Odalic.error.result.processing");
     }
-  
+
     return result.getWarnings().toArray(new String[result.getWarnings().size()]);
   }
 
   private Message getErrorMessage(String taskIdentifier, Client client) throws DPUException {
     final WebTarget target = getTasksTarget(client).path(taskIdentifier).path("result");
-  
+
     final Response response;
     try {
       response = target.request().accept(MediaType.APPLICATION_JSON_TYPE)
-        .header(AUTHORIZATION_HEADER_KEY, getAuthorizationHeaderContent()).get();
+          .header(AUTHORIZATION_HEADER_KEY, getAuthorizationHeaderContent()).get();
     } catch (final ProcessingException e) {
       throw ContextUtils.dpuException(ctx, e, "Odalic.error.message.request");
     }
-  
+
     final Message message;
     try {
       message = response.readEntity(Message.class);
     } catch (final ProcessingException e) {
       throw ContextUtils.dpuException(ctx, e, "Odalic.error.message.processing");
     }
-  
+
     return message;
   }
 
@@ -443,14 +448,14 @@ public class Odalic extends AbstractDpu<OdalicConfig_V1> {
       throws DPUException {
     final Entry entry = createOutputFile(this.annotatedTableOutput, generateOutputFileIdentifier(
         WORKING_ANNOTATED_TABLE_OUTPUT_FILE_PREFIX, WORKING_ANNOTATED_TABLE_OUTPUT_FILE_SUFFIX));
-  
+
     final File file;
     try {
       file = FilesHelper.asFile(entry);
     } catch (final DataUnitException e) {
       throw ContextUtils.dpuException(ctx, e, "Odalic.error.output.creation.annotatedTable");
     }
-  
+
     writeAnnotatedTable(taskIdentifier, client, file);
   }
 
@@ -458,16 +463,16 @@ public class Odalic extends AbstractDpu<OdalicConfig_V1> {
       final File outputFile) throws DPUException {
     final WebTarget target =
         getTasksTarget(client).path(taskIdentifier).path("result/annotated-table");
-  
+
     final ClientResponse response;
     try {
       response = target.request().accept(MediaType.APPLICATION_JSON_TYPE)
-        .header(AUTHORIZATION_HEADER_KEY, getAuthorizationHeaderContent())
-        .get(ClientResponse.class);
+          .header(AUTHORIZATION_HEADER_KEY, getAuthorizationHeaderContent())
+          .get(ClientResponse.class);
     } catch (final ProcessingException | WebApplicationException e) {
       throw ContextUtils.dpuException(ctx, e, "Odalic.error.annotatedTable.request");
     }
-  
+
     try (final InputStream entityStream = response.getEntityStream();
         final OutputStream outputStream = new FileOutputStream(outputFile)) {
       Io.fastCopy(entityStream, outputStream);
@@ -480,30 +485,30 @@ public class Odalic extends AbstractDpu<OdalicConfig_V1> {
       throws DPUException {
     final Entry entry = createOutputFile(this.extendedCsvOutput, generateOutputFileIdentifier(
         EXTENDED_CSV_WORKING_OUTPUT_FILE_PREFIX, EXTENDED_CSV_WORKING_OUTPUT_FILE_SUFFIX));
-  
+
     final File file;
     try {
       file = FilesHelper.asFile(entry);
     } catch (final DataUnitException e) {
       throw ContextUtils.dpuException(ctx, e, "Odalic.error.output.creation.extendedCsv");
     }
-  
+
     writeExtendedCsv(taskIdentifier, client, file);
   }
 
   private void writeExtendedCsv(final String taskIdentifier, final Client client,
       final File outputFile) throws DPUException {
     final WebTarget target = getTasksTarget(client).path(taskIdentifier).path("result/csv-export");
-  
+
     final ClientResponse response;
     try {
       response = target.request().accept(CSV_MEDIA_TYPE)
-        .header(AUTHORIZATION_HEADER_KEY, getAuthorizationHeaderContent())
-        .get(ClientResponse.class);
+          .header(AUTHORIZATION_HEADER_KEY, getAuthorizationHeaderContent())
+          .get(ClientResponse.class);
     } catch (final ProcessingException | WebApplicationException e) {
       throw ContextUtils.dpuException(ctx, e, "Odalic.error.extendedCsv.request");
     }
-  
+
     try (final InputStream entityStream = response.getEntityStream();
         final OutputStream outputStream = new FileOutputStream(outputFile)) {
       Io.fastCopy(entityStream, outputStream);
@@ -516,30 +521,30 @@ public class Odalic extends AbstractDpu<OdalicConfig_V1> {
       throws DPUException {
     final Entry entry = createOutputFile(this.annotatedTableOutput, generateOutputFileIdentifier(
         TURTLE_WORKING_OUTPUT_FILE_PREFIX, TURTLE_WORKING_OUTPUT_FILE_SUFFIX));
-  
+
     final File file;
     try {
       file = FilesHelper.asFile(entry);
     } catch (final DataUnitException e) {
       throw ContextUtils.dpuException(ctx, e, "Odalic.error.output.creation.turtle");
     }
-  
+
     writeTurtle(taskIdentifier, client, file);
   }
 
   private void writeTurtle(final String taskIdentifier, final Client client, final File outputFile)
       throws DPUException {
     final WebTarget target = getTasksTarget(client).path(taskIdentifier).path("result/rdf-export");
-  
+
     final ClientResponse response;
     try {
       response = target.request().accept(TURTLE_MEDIA_TYPE)
-        .header(AUTHORIZATION_HEADER_KEY, getAuthorizationHeaderContent())
-        .get(ClientResponse.class);
+          .header(AUTHORIZATION_HEADER_KEY, getAuthorizationHeaderContent())
+          .get(ClientResponse.class);
     } catch (final ProcessingException | WebApplicationException e) {
       throw ContextUtils.dpuException(ctx, e, "Odalic.error.turtle.request");
     }
-  
+
     try (final InputStream entityStream = response.getEntityStream();
         final OutputStream outputStream = new FileOutputStream(outputFile)) {
       Io.fastCopy(entityStream, outputStream);
