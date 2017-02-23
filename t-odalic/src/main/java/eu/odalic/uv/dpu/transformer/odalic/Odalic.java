@@ -250,7 +250,7 @@ public class Odalic extends AbstractDpu<OdalicConfig_V1> {
 
   private Model injectFileIdentifier(final String injected, final Model taskConfigurationModel) {
     final Model inputSubmodel = taskConfigurationModel.filter((Resource) null,
-        ValueFactoryImpl.getInstance().createURI("http://odalic.eu/internal/Configuration/Input"),
+        ValueFactoryImpl.getInstance().createURI("http://odalic.eu/internal/Configuration/input"),
         (Value) null);
     final Statement inputStatement = inputSubmodel.iterator().next();
 
