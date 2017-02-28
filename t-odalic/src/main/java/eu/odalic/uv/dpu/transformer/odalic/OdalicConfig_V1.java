@@ -15,7 +15,7 @@ public class OdalicConfig_V1 {
   private String taskConfiguration;
   
   private String charset;
-  private char delimiter;
+  private Character delimiter;
   private boolean emptyLinesIgnored;
   private Character quoteCharacter;
   private Character escapeCharacter;
@@ -23,7 +23,7 @@ public class OdalicConfig_V1 {
   private String lineSeparator;
 
   public OdalicConfig_V1() {
-    this.host = "http://odalic.eu/demo/odalic";
+    this.host = null;
     this.token = null;
     this.taskConfiguration = null;
     this.charset = StandardCharsets.UTF_8.name();
@@ -94,7 +94,7 @@ public class OdalicConfig_V1 {
   /**
    * @return the delimiter
    */
-  public char getDelimiter() {
+  public Character getDelimiter() {
     return delimiter;
   }
 

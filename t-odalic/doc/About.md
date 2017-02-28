@@ -10,7 +10,9 @@ Description of the DPU intended for the user of the DPU.
 
 ### Inputs and outputs
 
-|Name |Type | DataUnit | Description | Mandatory |
-|:--------|:------:|:------:|:-------------|:---------------------:|
-|input |i |FilesDataUnit |Input files |x|
-|output |o |RdfDataUnit |Produced RDF data |x|
+|Name                 |Type | DataUnit     | Description               | Mandatory |
+|:--------------------|:---:|:------------:|:--------------------------|:---------:|
+|input                |i    |FilesDataUnit |Input file                 |x          |
+|extendedCsvOutput    |o    |FilesDataUnit |Extended CSV file          |           |
+|annotatedTableOutput |o    |FilesDataUnit |Annotated table            |           |
+|turtleOutput         |o    |FilesDataUnit |Turtle-serialized RDF data |           |

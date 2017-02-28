@@ -1,20 +1,25 @@
 package eu.odalic.uv.dpu.transformer.odalic;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
+import com.vaadin.ui.Layout;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.Upload;
 import com.vaadin.ui.VerticalLayout;
-
 import eu.unifiedviews.dpu.config.DPUConfigException;
+import eu.unifiedviews.helpers.dpu.context.ContextUtils;
 import eu.unifiedviews.helpers.dpu.vaadin.dialog.AbstractDialog;
 
 /**
@@ -24,9 +29,56 @@ import eu.unifiedviews.helpers.dpu.vaadin.dialog.AbstractDialog;
  */
 public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
 
+  private static final Logger LOG = LoggerFactory.getLogger(OdalicVaadinDialog.class);
+  
+  private static class TaskConfigurationReceiver implements Upload.Receiver {
+
+    private static final long serialVersionUID = 7509022889268241224L;
+    
+    private ByteArrayOutputStream configurationStream = null;
+    
+    @Override
+    public OutputStream receiveUpload(String filename, String mimeType) {
+      LOG.debug("Upload received.");
+      
+      configurationStream = new ByteArrayOutputStream();
+      return configurationStream;
+    }
+    
+    public String get() throws IOException {
+      LOG.debug("Getting from the stream...");
+      
+      configurationStream.flush();
+      configurationStream.close();
+      
+      return new String(configurationStream.toByteArray(), StandardCharsets.UTF_8);
+    }
+
+    public boolean isReady() {
+      LOG.debug("Getting state of {}.", configurationStream);
+      
+      return configurationStream != null;
+    }
+
+    public void set(String taskConfiguration) throws IOException {
+      LOG.debug("Writing the current task configuration to stream.");
+      if (taskConfiguration == null) {
+        LOG.debug("No such exists.");
+        return;
+      }
+      
+      this.configurationStream = new ByteArrayOutputStream();
+      this.configurationStream.write(taskConfiguration.getBytes(StandardCharsets.UTF_8));
+      this.configurationStream.flush();
+      LOG.debug("Current task configuration written.");
+    }
+  }
+  
   private static final long serialVersionUID = -6249024409185217114L;
 
-  private ByteArrayOutputStream configurationStream;
+  private TaskConfigurationReceiver taskConfigurationReceiver;
+  
+  private TextField hostTextField;
   
   private TextField tokenTextField;
   
@@ -46,10 +98,21 @@ public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
 
   public OdalicVaadinDialog() {
     super(Odalic.class);
+    
+    taskConfigurationReceiver = new TaskConfigurationReceiver();
   }
 
   @Override
   public void setConfiguration(OdalicConfig_V1 c) throws DPUConfigException {
+    LOG.debug("Setting the configuration...");
+    
+    try {
+      this.taskConfigurationReceiver.set(c.getTaskConfiguration());
+    } catch (final IOException e) {
+      throw new DPUConfigException(e);
+    }
+    
+    this.hostTextField.setValue(c.getHost() == null ? "" : c.getHost());
     this.tokenTextField.setValue(c.getToken() == null ? "" : c.getToken());
     this.charsetTextField.setValue(c.getCharset());
     this.delimiterTextField.setValue(String.valueOf(c.getDelimiter()));
@@ -62,31 +125,49 @@ public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
 
   @Override
   public OdalicConfig_V1 getConfiguration() throws DPUConfigException {
+    LOG.debug("Getting the configuration...");
+    
     final OdalicConfig_V1 c = new OdalicConfig_V1();
 
+    if (this.hostTextField.getValue().isEmpty()) {
+      throw new DPUConfigException(ctx.tr("Odalic.error.host.empty"));
+    }
+    try {
+      URI.create(this.hostTextField.getValue());
+    } catch (final IllegalArgumentException e) {
+      throw new DPUConfigException(ctx.tr("Odalic.error.host.format"), e);
+    }
+    c.setHost(this.hostTextField.getValue());
+    
     if (this.tokenTextField.getValue().isEmpty()) {
       throw new DPUConfigException(ctx.tr("Odalic.error.token.empty"));
     }
     c.setToken(this.tokenTextField.getValue());
     
-    if (configurationStream == null) {
-      throw new DPUConfigException(ctx.tr("Odalic.error.taskConfiguration.empty"));
+    ContextUtils.sendShortInfo(ctx, "Attempt to get task config.");
+    if (taskConfigurationReceiver.isReady()) {
+      LOG.debug("Task config ready.");
+      
+      try {
+        c.setTaskConfiguration(taskConfigurationReceiver.get());
+        LOG.debug("Task config set.");
+      } catch (final IOException e) {
+        throw new DPUConfigException(e);
+      }
+    } else {
+      LOG.debug("Task config not ready.");
     }
-    c.setTaskConfiguration(new String(configurationStream.toByteArray(), StandardCharsets.UTF_8));
 
-    try {
-      Charset.forName(this.charsetTextField.getValue());
-    } catch (final IllegalCharsetNameException | UnsupportedCharsetException e) {
-      throw new DPUConfigException(ctx.tr("Odalic.error.charset.invalid"), e);
-    }
-    c.setCharset(this.charsetTextField.getValue());
-    
-    try {
-      c.setDelimiter(this.delimiterTextField.getValue().charAt(0));
-    } catch (final IndexOutOfBoundsException e) {
-      throw new DPUConfigException(ctx.tr("Odalic.error.delimiter.empty"), e); 
+    if (!this.charsetTextField.getValue().isEmpty()) {
+      try {
+        Charset.forName(this.charsetTextField.getValue());
+      } catch (final IllegalCharsetNameException | UnsupportedCharsetException e) {
+        throw new DPUConfigException(ctx.tr("Odalic.error.charset.invalid"), e);
+      }
+      c.setCharset(this.charsetTextField.getValue());
     }
     
+    c.setDelimiter(this.delimiterTextField.getValue().isEmpty() ? null : this.delimiterTextField.getValue().charAt(0));
     
     c.setEmptyLinesIgnored(this.emptyLinesIgnoredCheckBox.getValue());
     
@@ -105,66 +186,58 @@ public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
   @Override
   public void buildDialogLayout() {
     final VerticalLayout mainLayout = new VerticalLayout();
+    mainLayout.setSpacing(true);
     mainLayout.setWidth("100%");
     mainLayout.setHeight("-1px");
     mainLayout.setMargin(true);
 
-    mainLayout.addComponent(new Label(ctx.tr("Odalic.dialog.label")));
-
-    this.tokenTextField = addTextField(mainLayout, ctx.tr("Odalic.dialog.token"));
+    final HorizontalLayout connectionLayout = new HorizontalLayout();
+    connectionLayout.setCaption("Server connection");
+    connectionLayout.setSpacing(true);
     
-
-    final Upload upload =
-        new Upload("Odalic task configuration file import", new Upload.Receiver() {
-
-          private static final long serialVersionUID = 2495056208041024052L;
-
-          @Override
-          public OutputStream receiveUpload(String filename, String mimeType) {
-            configurationStream = new ByteArrayOutputStream();
-            return configurationStream;
-          }
-        });
-
-    mainLayout.addComponent(upload);
+    this.hostTextField = addTextField(connectionLayout, ctx.tr("Odalic.dialog.host"), 20);
+    this.tokenTextField = addTextField(connectionLayout, ctx.tr("Odalic.dialog.token"), 50);
+    mainLayout.addComponent(connectionLayout);
     
-    this.charsetTextField = addTextField(mainLayout, ctx.tr("Odalic.dialog.file.charset"));
-    this.delimiterTextField = addTextField(mainLayout, ctx.tr("Odalic.dialog.file.delimiter"));
-    this.emptyLinesIgnoredCheckBox = addCheckBox(mainLayout, ctx.tr("Odalic.dialog.file.emptyLinesIgnored"));
-    this.quoteCharacterTextField = addTextField(mainLayout, ctx.tr("Odalic.dialog.file.quoteCharacter"), 1);
-    this.escapeCharacterTextField = addTextField(mainLayout, ctx.tr("Odalic.dialog.file.escapeCharacter"), 1);
-    this.commentMarkerTextField = addTextField(mainLayout, ctx.tr("Odalic.dialog.file.commentMarker"), 1);
-    this.lineSeparatorTextField = addTextField(mainLayout, ctx.tr("Odalic.dialog.file.lineSeparator"));
+    final VerticalLayout inputLayout = new VerticalLayout();
+    inputLayout.setSpacing(true);
+    inputLayout.setWidth("100%");
+    inputLayout.setHeight("-1px");
+    
+    final Upload upload = new Upload("Task configuration import", this.taskConfigurationReceiver);    
+    inputLayout.addComponent(upload);
+    
+    this.charsetTextField = addTextField(inputLayout, ctx.tr("Odalic.dialog.file.charset"), 10);
+    this.delimiterTextField = addTextField(inputLayout, ctx.tr("Odalic.dialog.file.delimiter"), 1, 3);
+    this.emptyLinesIgnoredCheckBox = addCheckBox(inputLayout, ctx.tr("Odalic.dialog.file.emptyLinesIgnored"));
+    this.quoteCharacterTextField = addTextField(inputLayout, ctx.tr("Odalic.dialog.file.quoteCharacter"), 1, 3);
+    this.escapeCharacterTextField = addTextField(inputLayout, ctx.tr("Odalic.dialog.file.escapeCharacter"), 1, 3);
+    this.commentMarkerTextField = addTextField(inputLayout, ctx.tr("Odalic.dialog.file.commentMarker"), 1, 3);
+    this.lineSeparatorTextField = addTextField(inputLayout, ctx.tr("Odalic.dialog.file.lineSeparator"), 5);
 
+    mainLayout.addComponent(inputLayout);
+    
     setCompositionRoot(mainLayout);
   }
 
-  private static TextField addTextField(final VerticalLayout layout, final String label, final int maxLength) {
-    final HorizontalLayout rowLayout = new HorizontalLayout();
-    rowLayout.addComponent(new Label(label));
-    
-    final TextField textField = new TextField();
+  private static TextField addTextField(final Layout layout, final String label, final int maxLength, final int emSize) {
+    final TextField textField = new TextField(label);
     textField.setMaxLength(maxLength);
-    rowLayout.addComponent(textField);
+    textField.setWidth(emSize, Unit.EM);
     
-    layout.addComponent(rowLayout);
-    
-    
+    layout.addComponent(textField);
+        
     return textField;
   }
   
-  private static TextField addTextField(final VerticalLayout layout, final String label) {
-    return addTextField(layout, label, -1);
+  private static TextField addTextField(final Layout layout, final String label, final int emSize) {
+    return addTextField(layout, label, -1, emSize);
   }
   
-  private static CheckBox addCheckBox(final VerticalLayout layout, final String label) {
-    final HorizontalLayout rowLayout = new HorizontalLayout();
-    rowLayout.addComponent(new Label(label));
+  private static CheckBox addCheckBox(final Layout layout, final String label) {
+    final CheckBox checkBox = new CheckBox(label);
     
-    final CheckBox checkBox = new CheckBox();
-    rowLayout.addComponent(checkBox);
-    
-    layout.addComponent(rowLayout);
+    layout.addComponent(checkBox);
     
     return checkBox;
   }
