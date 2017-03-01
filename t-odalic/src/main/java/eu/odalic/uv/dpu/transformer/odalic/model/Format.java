@@ -120,13 +120,13 @@ public final class Format implements Serializable {
     if (charset == null) {
       throw new NullPointerException("Character set cannot be null!");
     }
-    
+
     try {
       Charset.forName(charset);
     } catch (final IllegalCharsetNameException | UnsupportedCharsetException e) {
       throw new IllegalArgumentException("Invalid character set!", e);
     }
-    
+
     this.charset = charset;
   }
 

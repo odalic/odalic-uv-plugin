@@ -7,7 +7,7 @@ Odalic
 
 ### Technical notes
 
-* May be used instead of DPU X, it also replaces DPY Y.
+* Requires set-up Odalic Semantic Table Interpretation server.
 
 ### Version history
 

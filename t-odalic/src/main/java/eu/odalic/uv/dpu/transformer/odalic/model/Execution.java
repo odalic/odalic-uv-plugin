@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package eu.odalic.uv.dpu.transformer.odalic.model;
 
@@ -9,8 +9,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Execution dummy.
- * 
+ * Execution dummy. Sent to server to start the task execution.
+ *
  * @author Václav Brodec
  *
  */
@@ -18,9 +18,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 public final class Execution implements Serializable {
 
   private static final long serialVersionUID = 7047435888954718620L;
-  
+
   private boolean draft = false;
-  
+
   public Execution() {}
 
   /**
@@ -28,21 +28,23 @@ public final class Execution implements Serializable {
    */
   @XmlElement
   public boolean isDraft() {
-    return draft;
-  }
-
-  /* (non-Javadoc)
-   * @see java.lang.Object#toString()
-   */
-  @Override
-  public String toString() {
-    return "Execution [draft=" + draft + "]";
+    return this.draft;
   }
 
   /**
    * @param draft the draft to set
    */
-  public void setDraft(boolean draft) {
+  public void setDraft(final boolean draft) {
     this.draft = draft;
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    return "Execution [draft=" + this.draft + "]";
   }
 }

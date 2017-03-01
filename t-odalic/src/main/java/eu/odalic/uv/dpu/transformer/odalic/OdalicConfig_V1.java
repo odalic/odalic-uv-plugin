@@ -11,16 +11,15 @@ public class OdalicConfig_V1 {
 
   private String host;
   private String token;
-  
+
   private String taskConfiguration;
-  
+
   private String charset;
   private Character delimiter;
   private boolean emptyLinesIgnored;
   private Character quoteCharacter;
   private Character escapeCharacter;
   private Character commentMarker;
-  private String lineSeparator;
 
   public OdalicConfig_V1() {
     this.host = null;
@@ -32,146 +31,131 @@ public class OdalicConfig_V1 {
     this.quoteCharacter = null;
     this.escapeCharacter = null;
     this.commentMarker = null;
-    this.lineSeparator = System.lineSeparator();
-  }
-
-  /**
-   * @return the host
-   */
-  public String getHost() {
-    return host;
-  }
-
-  /**
-   * @param host the host to set
-   */
-  public void setHost(String host) {
-    this.host = host;
-  }
-
-  /**
-   * @return the token
-   */
-  public String getToken() {
-    return token;
-  }
-
-  /**
-   * @param token the token to set
-   */
-  public void setToken(String token) {
-    this.token = token;
-  }
-
-  /**
-   * @return the task configuration
-   */
-  public String getTaskConfiguration() {
-    return taskConfiguration;
-  }
-
-  /**
-   * @param taskConfiguration the task configuration to set
-   */
-  public void setTaskConfiguration(String taskConfiguration) {
-    this.taskConfiguration = taskConfiguration;
-  }
-  
-  /**
-   * @return the character set
-   */
-  public String getCharset() {
-    return charset;
-  }
-
-  /**
-   * @param charset the character set to set
-   */
-  public void setCharset(String charset) {
-    this.charset = charset;
-  }
-
-  /**
-   * @return the delimiter
-   */
-  public Character getDelimiter() {
-    return delimiter;
-  }
-
-  /**
-   * @param delimiter the delimiter to set
-   */
-  public void setDelimiter(char delimiter) {
-    this.delimiter = delimiter;
-  }
-
-  /**
-   * @return are empty lines ignored
-   */
-  public boolean isEmptyLinesIgnored() {
-    return emptyLinesIgnored;
-  }
-
-  /**
-   * @param emptyLinesIgnored set whether the empty lines are ignored
-   */
-  public void setEmptyLinesIgnored(boolean emptyLinesIgnored) {
-    this.emptyLinesIgnored = emptyLinesIgnored;
-  }
-
-  /**
-   * @return the quote character
-   */
-  public Character getQuoteCharacter() {
-    return quoteCharacter;
-  }
-
-  /**
-   * @param quoteCharacter the quote character to set
-   */
-  public void setQuoteCharacter(Character quoteCharacter) {
-    this.quoteCharacter = quoteCharacter;
-  }
-
-  /**
-   * @return the escape character
-   */
-  public Character getEscapeCharacter() {
-    return escapeCharacter;
-  }
-
-  /**
-   * @param escapeCharacter the escape character to set
-   */
-  public void setEscapeCharacter(Character escapeCharacter) {
-    this.escapeCharacter = escapeCharacter;
   }
 
   /**
    * @return the comment marker
    */
   public Character getCommentMarker() {
-    return commentMarker;
+    return this.commentMarker;
+  }
+
+  /**
+   * @return the delimiter
+   */
+  public Character getDelimiter() {
+    return this.delimiter;
+  }
+
+  /**
+   * @return the escape character
+   */
+  public Character getEscapeCharacter() {
+    return this.escapeCharacter;
+  }
+
+  /**
+   * @return the host
+   */
+  public String getHost() {
+    return this.host;
+  }
+
+  /**
+   * @return the character set
+   */
+  public String getCharset() {
+    return this.charset;
+  }
+
+  /**
+   * @return the quote character
+   */
+  public Character getQuoteCharacter() {
+    return this.quoteCharacter;
+  }
+
+  /**
+   * @return the task configuration
+   */
+  public String getTaskConfiguration() {
+    return this.taskConfiguration;
+  }
+
+  /**
+   * @return the token
+   */
+  public String getToken() {
+    return this.token;
+  }
+
+  /**
+   * @return are empty lines ignored
+   */
+  public boolean isEmptyLinesIgnored() {
+    return this.emptyLinesIgnored;
   }
 
   /**
    * @param commentMarker the comment marker to set
    */
-  public void setCommentMarker(Character commentMarker) {
+  public void setCommentMarker(final Character commentMarker) {
     this.commentMarker = commentMarker;
   }
 
   /**
-   * @return the line separator
+   * @param delimiter the delimiter to set
    */
-  public String getLineSeparator() {
-    return lineSeparator;
+  public void setDelimiter(final char delimiter) {
+    this.delimiter = delimiter;
   }
 
   /**
-   * @param lineSeparator the line separator to set
+   * @param emptyLinesIgnored set whether the empty lines are ignored
    */
-  public void setLineSeparator(String lineSeparator) {
-    this.lineSeparator = lineSeparator;
+  public void setEmptyLinesIgnored(final boolean emptyLinesIgnored) {
+    this.emptyLinesIgnored = emptyLinesIgnored;
+  }
+
+  /**
+   * @param escapeCharacter the escape character to set
+   */
+  public void setEscapeCharacter(final Character escapeCharacter) {
+    this.escapeCharacter = escapeCharacter;
+  }
+
+  /**
+   * @param host the host to set
+   */
+  public void setHost(final String host) {
+    this.host = host;
+  }
+
+  /**
+   * @param charset the character set to set
+   */
+  public void setCharset(final String charset) {
+    this.charset = charset;
+  }
+
+  /**
+   * @param quoteCharacter the quote character to set
+   */
+  public void setQuoteCharacter(final Character quoteCharacter) {
+    this.quoteCharacter = quoteCharacter;
+  }
+
+  /**
+   * @param taskConfiguration the task configuration to set
+   */
+  public void setTaskConfiguration(final String taskConfiguration) {
+    this.taskConfiguration = taskConfiguration;
+  }
+
+  /**
+   * @param token the token to set
+   */
+  public void setToken(final String token) {
+    this.token = token;
   }
 }

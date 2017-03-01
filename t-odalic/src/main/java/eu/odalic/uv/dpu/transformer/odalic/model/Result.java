@@ -3,13 +3,14 @@ package eu.odalic.uv.dpu.transformer.odalic.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Partial mapping of task processing result.
- * 
+ *
  * @author Václav Brodec
  *
  */
@@ -17,19 +18,19 @@ public final class Result implements Serializable {
 
   private static final long serialVersionUID = -6359038623760039155L;
 
-  private JsonNode subjectColumnPositions;
+  private final JsonNode subjectColumnPositions;
 
-  private JsonNode headerAnnotations;
+  private final JsonNode headerAnnotations;
 
-  private JsonNode cellAnnotations;
+  private final JsonNode cellAnnotations;
 
-  private JsonNode columnRelationAnnotations;
+  private final JsonNode columnRelationAnnotations;
 
-  private JsonNode statisticalAnnotations;
+  private final JsonNode statisticalAnnotations;
 
-  private JsonNode columnProcessingAnnotations;
+  private final JsonNode columnProcessingAnnotations;
 
-  private List<String> warnings;
+  private final List<String> warnings;
 
   @JsonCreator
   public Result(@JsonProperty("subjectColumnPositions") final JsonNode subjectColumnPositions,
@@ -48,31 +49,31 @@ public final class Result implements Serializable {
     this.warnings = new ArrayList<>(warnings);
   }
 
-  public JsonNode getSubjectColumnPositions() {
-    return subjectColumnPositions;
-  }
-
-  public JsonNode getHeaderAnnotations() {
-    return headerAnnotations;
-  }
-
   public JsonNode getCellAnnotations() {
-    return cellAnnotations;
-  }
-
-  public JsonNode getColumnRelationAnnotations() {
-    return columnRelationAnnotations;
-  }
-
-  public JsonNode getStatisticalAnnotations() {
-    return statisticalAnnotations;
+    return this.cellAnnotations;
   }
 
   public JsonNode getColumnProcessingAnnotations() {
-    return columnProcessingAnnotations;
+    return this.columnProcessingAnnotations;
+  }
+
+  public JsonNode getColumnRelationAnnotations() {
+    return this.columnRelationAnnotations;
+  }
+
+  public JsonNode getHeaderAnnotations() {
+    return this.headerAnnotations;
+  }
+
+  public JsonNode getStatisticalAnnotations() {
+    return this.statisticalAnnotations;
+  }
+
+  public JsonNode getSubjectColumnPositions() {
+    return this.subjectColumnPositions;
   }
 
   public List<String> getWarnings() {
-    return warnings;
+    return this.warnings;
   }
 }

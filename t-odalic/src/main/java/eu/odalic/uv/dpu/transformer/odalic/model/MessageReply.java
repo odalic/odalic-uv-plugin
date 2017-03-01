@@ -24,46 +24,46 @@ public final class MessageReply {
   private String stamp;
 
   public MessageReply() {}
-  
-  @XmlElement
-  public int getStatus() {
-    return status;
-  }
-
-  public void setStatus(int status) {
-    this.status = status;
-  }
-
-  @XmlElement
-  public String getType() {
-    return type;
-  }
-
-  public void setType(String type) {
-    this.type = type;
-  }
 
   @XmlElement
   public Message getPayload() {
-    return payload;
-  }
-
-  public void setPayload(Message payload) {
-    this.payload = payload;
+    return this.payload;
   }
 
   @XmlElement
   public String getStamp() {
-    return stamp;
+    return this.stamp;
   }
 
-  public void setStamp(String stamp) {
+  @XmlElement
+  public int getStatus() {
+    return this.status;
+  }
+
+  @XmlElement
+  public String getType() {
+    return this.type;
+  }
+
+  public void setPayload(final Message payload) {
+    this.payload = payload;
+  }
+
+  public void setStamp(final String stamp) {
     this.stamp = stamp;
+  }
+
+  public void setStatus(final int status) {
+    this.status = status;
+  }
+
+  public void setType(final String type) {
+    this.type = type;
   }
 
   @Override
   public String toString() {
-    return "MessageReply [status=" + this.status + ", type=" + this.type + ", payload=" + this.payload
-        + ", stamp=" + this.stamp + "]";
+    return "MessageReply [status=" + this.status + ", type=" + this.type + ", payload="
+        + this.payload + ", stamp=" + this.stamp + "]";
   }
 }

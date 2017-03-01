@@ -12,7 +12,7 @@ import java.nio.charset.Charset;
 
 /**
  * I/O utilities.
- * 
+ *
  * @author Václav Brodec
  *
  */
@@ -20,15 +20,16 @@ public final class Io {
 
   private static final int BUFFER_SIZE = 16 * 1024;
 
-  public static void fastCopy(final InputStream source, final OutputStream destination) throws IOException {
+  public static void fastCopy(final InputStream source, final OutputStream destination)
+      throws IOException {
     final ReadableByteChannel inputChannel = Channels.newChannel(source);
     final WritableByteChannel outputChannel = Channels.newChannel(destination);
-    
+
     fastCopy(inputChannel, outputChannel);
   }
 
-  public static void fastCopy(final ReadableByteChannel source, final WritableByteChannel destination)
-      throws IOException {
+  public static void fastCopy(final ReadableByteChannel source,
+      final WritableByteChannel destination) throws IOException {
     final ByteBuffer buffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
 
     while (source.read(buffer) != -1) {

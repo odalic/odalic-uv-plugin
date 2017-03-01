@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlType;
 
 /**
  * Task execution state.
- * 
+ *
  * @author Václav Brodec
  */
 @XmlType
@@ -18,22 +18,22 @@ public enum State {
    * Task is specified, but not yet submitted for execution.
    */
   @XmlEnumValue("READY") READY,
-  
+
   /**
    * Task is submitted for execution, but not done or canceled yet.
    */
   @XmlEnumValue("RUNNING") RUNNING,
-  
+
   /**
    * Task execution has ended with success.
    */
   @XmlEnumValue("SUCCESS") SUCCESS,
-  
+
   /**
    * Task execution has ended with warnings.
    */
   @XmlEnumValue("WARNING") WARNING,
-  
+
   /**
    * Task execution has ended with an error.
    */

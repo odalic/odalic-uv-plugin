@@ -11,7 +11,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * Reporting message with extra details for developers.
- * 
+ *
  * @author Václav Brodec
  *
  */
@@ -29,26 +29,27 @@ public final class Message implements Serializable {
   public Message() {}
 
   /**
-   * @return the text
-   */
-  @XmlElement
-  public String getText() {
-    return text;
-  }
-
-  /**
-   * @param text the text to set
-   */
-  public void setText(final String text) {
-    this.text = text;
-  }
-
-  /**
    * @return the additional resources
    */
   @XmlElement
   public List<URI> getAdditionalResources() {
-    return additionalResources;
+    return this.additionalResources;
+  }
+
+  /**
+   * @return the debug content
+   */
+  @XmlElement
+  public String getDebugContent() {
+    return this.debugContent;
+  }
+
+  /**
+   * @return the text
+   */
+  @XmlElement
+  public String getText() {
+    return this.text;
   }
 
   /**
@@ -59,26 +60,27 @@ public final class Message implements Serializable {
   }
 
   /**
-   * @return the debug content
-   */
-  @XmlElement
-  public String getDebugContent() {
-    return debugContent;
-  }
-
-  /**
    * @param debugContent the debugContent to set
    */
   public void setDebugContent(final String debugContent) {
     this.debugContent = debugContent;
   }
 
-  /* (non-Javadoc)
+  /**
+   * @param text the text to set
+   */
+  public void setText(final String text) {
+    this.text = text;
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
    * @see java.lang.Object#toString()
    */
   @Override
   public String toString() {
-    return "Message [text=" + text + ", additionalResources=" + additionalResources
-        + ", debugContent=" + debugContent + "]";
+    return "Message [text=" + this.text + ", additionalResources=" + this.additionalResources
+        + ", debugContent=" + this.debugContent + "]";
   }
 }
