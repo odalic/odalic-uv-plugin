@@ -86,10 +86,9 @@ public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
     return checkBox;
   }
 
-  private TextArea addTextArea(final Layout layout, final String label, final int rows,
-      final int emWidth) {
+  private static TextArea addTextArea(final Layout layout, final String label, final int rows,
+      final float emWidth) {
     final TextArea textArea = new TextArea(label);
-    textArea.setReadOnly(true);
     textArea.setWordwrap(false);
     textArea.setRows(rows);
     textArea.setWidth(emWidth, Unit.EM);
@@ -99,12 +98,12 @@ public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
     return textArea;
   }
 
-  private static TextField addTextField(final Layout layout, final String label, final int emSize) {
+  private static TextField addTextField(final Layout layout, final String label, final float emSize) {
     return addTextField(layout, label, -1, emSize);
   }
 
   private static TextField addTextField(final Layout layout, final String label,
-      final int maxLength, final int emSize) {
+      final int maxLength, final float emSize) {
     final TextField textField = new TextField(label);
     textField.setMaxLength(maxLength);
     textField.setWidth(emSize, Unit.EM);
@@ -167,6 +166,7 @@ public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
 
     this.taskConfigurationTextArea =
         addTextArea(inputLayout, this.ctx.tr("Odalic.dialog.task.configuration.current"), 5, 50);
+    this.taskConfigurationTextArea.setEnabled(false);
 
     this.charsetTextField =
         addTextField(inputLayout, this.ctx.tr("Odalic.dialog.file.charset"), 10);
