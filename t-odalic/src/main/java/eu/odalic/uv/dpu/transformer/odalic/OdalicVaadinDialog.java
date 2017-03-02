@@ -93,7 +93,7 @@ public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
     textArea.setRows(rows);
     textArea.setWidth(emWidth, Unit.EM);
 
-    layout.addComponent(layout);
+    layout.addComponent(textArea);
 
     return textArea;
   }
