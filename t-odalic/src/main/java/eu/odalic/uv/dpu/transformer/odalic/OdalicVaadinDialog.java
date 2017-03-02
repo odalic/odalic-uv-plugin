@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Layout;
+import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.Upload;
 import com.vaadin.ui.VerticalLayout;
@@ -85,6 +86,19 @@ public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
     return checkBox;
   }
 
+  private TextArea addTextArea(final Layout layout, final String label, final int rows,
+      final int emWidth) {
+    final TextArea textArea = new TextArea(label);
+    textArea.setReadOnly(true);
+    textArea.setWordwrap(false);
+    textArea.setRows(rows);
+    textArea.setWidth(emWidth, Unit.EM);
+
+    layout.addComponent(layout);
+
+    return textArea;
+  }
+
   private static TextField addTextField(final Layout layout, final String label, final int emSize) {
     return addTextField(layout, label, -1, emSize);
   }
@@ -105,6 +119,8 @@ public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
   private TextField hostTextField;
 
   private TextField tokenTextField;
+
+  private TextArea taskConfigurationTextArea;
 
   private TextField charsetTextField;
 
@@ -145,8 +161,12 @@ public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
     inputLayout.setWidth("100%");
     inputLayout.setHeight("-1px");
 
-    final Upload upload = new Upload(this.ctx.tr("Odalic.dialog.task.configuration"), this.taskConfigurationReceiver);
+    final Upload upload =
+        new Upload(this.ctx.tr("Odalic.dialog.task.configuration"), this.taskConfigurationReceiver);
     inputLayout.addComponent(upload);
+
+    this.taskConfigurationTextArea =
+        addTextArea(inputLayout, this.ctx.tr("Odalic.dialog.task.configuration.current"), 5, 50);
 
     this.charsetTextField =
         addTextField(inputLayout, this.ctx.tr("Odalic.dialog.file.charset"), 10);
@@ -234,6 +254,7 @@ public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
     } catch (final IOException e) {
       throw new DPUConfigException(e);
     }
+    this.taskConfigurationTextArea.setValue(c.getTaskConfiguration() == null ? "" : c.getTaskConfiguration());
 
     this.hostTextField.setValue(c.getHost() == null ? "" : c.getHost());
     this.tokenTextField.setValue(c.getToken() == null ? "" : c.getToken());
