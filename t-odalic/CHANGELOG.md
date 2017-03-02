@@ -1,6 +1,6 @@
 Odalic
 ----------
 
-v1.0.0-SNAPSHOT
+v1.0.0
 ---
 * Initial version of the DPU
