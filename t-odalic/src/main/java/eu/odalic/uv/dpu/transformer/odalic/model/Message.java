@@ -73,11 +73,6 @@ public final class Message implements Serializable {
     this.text = text;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see java.lang.Object#toString()
-   */
   @Override
   public String toString() {
     return "Message [text=" + this.text + ", additionalResources=" + this.additionalResources

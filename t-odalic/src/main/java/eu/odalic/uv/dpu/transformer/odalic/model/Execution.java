@@ -38,11 +38,6 @@ public final class Execution implements Serializable {
     this.draft = draft;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see java.lang.Object#toString()
-   */
   @Override
   public String toString() {
     return "Execution [draft=" + this.draft + "]";

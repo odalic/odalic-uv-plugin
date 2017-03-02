@@ -124,54 +124,6 @@ public class Odalic extends AbstractDpu<OdalicConfig_V1> {
   public Odalic() {
     super(OdalicVaadinDialog.class, ConfigHistory.noHistory(OdalicConfig_V1.class));
   }
-  
-  @Override
-  protected void innerExecute() throws DPUException {
-    ContextUtils.sendShortInfo(this.ctx, "Odalic.stage.start");
-    ContextUtils.sendShortInfo(this.ctx, "Odalic.stage.input.start");
-
-    final Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class)
-        .register(JacksonFeature.class).build();
-
-    final String inputFileIdentifier = generateInputFileIdentifier();
-    final File inputFile = getInputFile();
-    final Format inputFileFormat = getInputFileFormat();
-    LOG.info("Sending input file...");
-    sendInputFile(inputFileIdentifier, inputFile, client);
-    LOG.info("Input file sent.");
-    LOG.info("Sending input file format...");
-    sendInputFileFormat(inputFileIdentifier, inputFileFormat, client);
-    LOG.info("Input file format sent.");
-
-    ContextUtils.sendShortInfo(this.ctx, "Odalic.stage.input.finish");
-    ContextUtils.sendShortInfo(this.ctx, "Odalic.stage.task.start");
-
-    final String taskIdentifier = generateTaskIdentifier();
-    final String taskConfiguration = getTaskConfiguration(inputFileIdentifier);
-    LOG.info("Sending task configuration...");
-    sendTaskConfigruation(taskIdentifier, taskConfiguration, client);
-    LOG.info("Task configuration sent.");
-
-    ContextUtils.sendShortInfo(this.ctx, "Odalic.stage.task.finish");
-    ContextUtils.sendShortInfo(this.ctx, "Odalic.stage.execution.start");
-
-    LOG.info("Starting exeuction...");
-    startExecution(taskIdentifier, client);
-    LOG.info("Execution started.");
-    final State state = poll(taskIdentifier, client);
-    LOG.info("Terminal state reached.");
-    evaluateTerminalState(state, taskIdentifier, client);
-
-    ContextUtils.sendShortInfo(this.ctx, "Odalic.stage.execution.finish");
-    ContextUtils.sendShortInfo(this.ctx, "Odalic.stage.export.start");
-
-    createAnnotatedTableOutput(client, taskIdentifier);
-    createExtendedCsvOutput(client, taskIdentifier);
-    createTurtleOutput(client, taskIdentifier);
-
-    ContextUtils.sendShortInfo(this.ctx, "Odalic.stage.export.finish");
-    ContextUtils.sendShortInfo(this.ctx, "Odalic.stage.finish");
-  }
 
   private void cancel(final String taskIdentifier, final Client client) throws DPUException {
     final WebTarget target = getTasksTarget(client).path(taskIdentifier).path("execution");
@@ -422,6 +374,54 @@ public class Odalic extends AbstractDpu<OdalicConfig_V1> {
         ValueFactoryImpl.getInstance().createLiteral(injected), inputStatement.getContext()));
 
     return taskConfigurationModel;
+  }
+
+  @Override
+  protected void innerExecute() throws DPUException {
+    ContextUtils.sendShortInfo(this.ctx, "Odalic.stage.start");
+    ContextUtils.sendShortInfo(this.ctx, "Odalic.stage.input.start");
+
+    final Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class)
+        .register(JacksonFeature.class).build();
+
+    final String inputFileIdentifier = generateInputFileIdentifier();
+    final File inputFile = getInputFile();
+    final Format inputFileFormat = getInputFileFormat();
+    LOG.info("Sending input file...");
+    sendInputFile(inputFileIdentifier, inputFile, client);
+    LOG.info("Input file sent.");
+    LOG.info("Sending input file format...");
+    sendInputFileFormat(inputFileIdentifier, inputFileFormat, client);
+    LOG.info("Input file format sent.");
+
+    ContextUtils.sendShortInfo(this.ctx, "Odalic.stage.input.finish");
+    ContextUtils.sendShortInfo(this.ctx, "Odalic.stage.task.start");
+
+    final String taskIdentifier = generateTaskIdentifier();
+    final String taskConfiguration = getTaskConfiguration(inputFileIdentifier);
+    LOG.info("Sending task configuration...");
+    sendTaskConfigruation(taskIdentifier, taskConfiguration, client);
+    LOG.info("Task configuration sent.");
+
+    ContextUtils.sendShortInfo(this.ctx, "Odalic.stage.task.finish");
+    ContextUtils.sendShortInfo(this.ctx, "Odalic.stage.execution.start");
+
+    LOG.info("Starting exeuction...");
+    startExecution(taskIdentifier, client);
+    LOG.info("Execution started.");
+    final State state = poll(taskIdentifier, client);
+    LOG.info("Terminal state reached.");
+    evaluateTerminalState(state, taskIdentifier, client);
+
+    ContextUtils.sendShortInfo(this.ctx, "Odalic.stage.execution.finish");
+    ContextUtils.sendShortInfo(this.ctx, "Odalic.stage.export.start");
+
+    createAnnotatedTableOutput(client, taskIdentifier);
+    createExtendedCsvOutput(client, taskIdentifier);
+    createTurtleOutput(client, taskIdentifier);
+
+    ContextUtils.sendShortInfo(this.ctx, "Odalic.stage.export.finish");
+    ContextUtils.sendShortInfo(this.ctx, "Odalic.stage.finish");
   }
 
   private Model parseTaskConfiguration(final String serialization) throws DPUException {

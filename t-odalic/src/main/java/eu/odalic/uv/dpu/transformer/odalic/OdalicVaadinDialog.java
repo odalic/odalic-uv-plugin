@@ -1,7 +1,6 @@
 package eu.odalic.uv.dpu.transformer.odalic;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
@@ -12,16 +11,20 @@ import java.nio.charset.UnsupportedCharsetException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Layout;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.Upload;
+import com.vaadin.ui.Upload.SucceededEvent;
+import com.vaadin.ui.Upload.SucceededListener;
 import com.vaadin.ui.VerticalLayout;
 
 import eu.unifiedviews.dpu.config.DPUConfigException;
-import eu.unifiedviews.helpers.dpu.context.ContextUtils;
 import eu.unifiedviews.helpers.dpu.vaadin.dialog.AbstractDialog;
 
 /**
@@ -31,25 +34,17 @@ import eu.unifiedviews.helpers.dpu.vaadin.dialog.AbstractDialog;
  */
 public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
 
-  private static class TaskConfigurationReceiver implements Upload.Receiver {
+  private static class TaskConfigurationUploader implements Upload.Receiver, SucceededListener {
 
     private static final long serialVersionUID = 7509022889268241224L;
 
     private ByteArrayOutputStream configurationStream = null;
 
-    public String get() throws IOException {
-      LOG.debug("Getting from the stream...");
+    private TextArea configurationTextArea = null;
 
-      this.configurationStream.flush();
-      this.configurationStream.close();
-
-      return new String(this.configurationStream.toByteArray(), StandardCharsets.UTF_8);
-    }
-
-    public boolean isReady() {
-      LOG.debug("Getting state of {}.", this.configurationStream);
-
-      return this.configurationStream != null;
+    public String get() {
+      return (this.configurationTextArea.getValue().isEmpty() ? null
+          : this.configurationTextArea.getValue());
     }
 
     @Override
@@ -60,23 +55,47 @@ public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
       return this.configurationStream;
     }
 
-    public void set(final String taskConfiguration) throws IOException {
-      LOG.debug("Writing the current task configuration to stream.");
-      if (taskConfiguration == null) {
-        LOG.debug("No such exists.");
-        return;
-      }
+    public void set(final String taskConfiguration) {
+      this.configurationTextArea.setValue((taskConfiguration == null ? "" : taskConfiguration));
+    }
 
-      this.configurationStream = new ByteArrayOutputStream();
-      this.configurationStream.write(taskConfiguration.getBytes(StandardCharsets.UTF_8));
-      this.configurationStream.flush();
-      LOG.debug("Current task configuration written.");
+    public void setClearButton(final Button button) {
+      button.addClickListener(new ClickListener() {
+
+        private static final long serialVersionUID = -8837314338808230779L;
+
+        @Override
+        public void buttonClick(final ClickEvent event) {
+          TaskConfigurationUploader.this.configurationTextArea.setValue("");
+        }
+      });
+    }
+
+    public void setConfigurationTextArea(final TextArea textArea) {
+      textArea.setEnabled(false);
+      this.configurationTextArea = textArea;
+    }
+
+    @Override
+    public void uploadSucceeded(final SucceededEvent event) {
+      LOG.debug("Upload succeeded.");
+
+      this.configurationTextArea
+          .setValue(new String(this.configurationStream.toByteArray(), StandardCharsets.UTF_8));
     }
   }
 
   private static final Logger LOG = LoggerFactory.getLogger(OdalicVaadinDialog.class);
 
   private static final long serialVersionUID = -6249024409185217114L;
+
+  private static Button addButton(final Layout layout, final String label) {
+    final Button button = new Button(label);
+
+    layout.addComponent(button);
+
+    return button;
+  }
 
   private static CheckBox addCheckBox(final Layout layout, final String label) {
     final CheckBox checkBox = new CheckBox(label);
@@ -98,7 +117,8 @@ public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
     return textArea;
   }
 
-  private static TextField addTextField(final Layout layout, final String label, final float emSize) {
+  private static TextField addTextField(final Layout layout, final String label,
+      final float emSize) {
     return addTextField(layout, label, -1, emSize);
   }
 
@@ -113,13 +133,11 @@ public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
     return textField;
   }
 
-  private final TaskConfigurationReceiver taskConfigurationReceiver;
+  private final TaskConfigurationUploader taskConfigurationUploader;
 
   private TextField hostTextField;
 
   private TextField tokenTextField;
-
-  private TextArea taskConfigurationTextArea;
 
   private TextField charsetTextField;
 
@@ -136,7 +154,7 @@ public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
   public OdalicVaadinDialog() {
     super(Odalic.class);
 
-    this.taskConfigurationReceiver = new TaskConfigurationReceiver();
+    this.taskConfigurationUploader = new TaskConfigurationUploader();
   }
 
   @Override
@@ -161,12 +179,14 @@ public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
     inputLayout.setHeight("-1px");
 
     final Upload upload =
-        new Upload(this.ctx.tr("Odalic.dialog.task.configuration"), this.taskConfigurationReceiver);
+        new Upload(this.ctx.tr("Odalic.dialog.task.configuration"), this.taskConfigurationUploader);
+    upload.addSucceededListener(this.taskConfigurationUploader);
     inputLayout.addComponent(upload);
 
-    this.taskConfigurationTextArea =
-        addTextArea(inputLayout, this.ctx.tr("Odalic.dialog.task.configuration.current"), 5, 50);
-    this.taskConfigurationTextArea.setEnabled(false);
+    this.taskConfigurationUploader.setConfigurationTextArea(
+        addTextArea(inputLayout, this.ctx.tr("Odalic.dialog.task.configuration.current"), 5, 50));
+    this.taskConfigurationUploader.setClearButton(
+        addButton(inputLayout, this.ctx.tr("Odalic.dialog.task.configuration.clear")));
 
     this.charsetTextField =
         addTextField(inputLayout, this.ctx.tr("Odalic.dialog.file.charset"), 10);
@@ -207,19 +227,8 @@ public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
     }
     c.setToken(this.tokenTextField.getValue());
 
-    ContextUtils.sendShortInfo(this.ctx, "Attempt to get task config.");
-    if (this.taskConfigurationReceiver.isReady()) {
-      LOG.debug("Task config ready.");
-
-      try {
-        c.setTaskConfiguration(this.taskConfigurationReceiver.get());
-        LOG.debug("Task config set.");
-      } catch (final IOException e) {
-        throw new DPUConfigException(e);
-      }
-    } else {
-      LOG.debug("Task config not ready.");
-    }
+    c.setTaskConfiguration(this.taskConfigurationUploader.get());
+    LOG.debug("Task config set.");
 
     if (!this.charsetTextField.getValue().isEmpty()) {
       try {
@@ -249,12 +258,7 @@ public class OdalicVaadinDialog extends AbstractDialog<OdalicConfig_V1> {
   public void setConfiguration(final OdalicConfig_V1 c) throws DPUConfigException {
     LOG.debug("Setting the configuration...");
 
-    try {
-      this.taskConfigurationReceiver.set(c.getTaskConfiguration());
-    } catch (final IOException e) {
-      throw new DPUConfigException(e);
-    }
-    this.taskConfigurationTextArea.setValue(c.getTaskConfiguration() == null ? "" : c.getTaskConfiguration());
+    this.taskConfigurationUploader.set(c.getTaskConfiguration());
 
     this.hostTextField.setValue(c.getHost() == null ? "" : c.getHost());
     this.tokenTextField.setValue(c.getToken() == null ? "" : c.getToken());
