@@ -18,7 +18,7 @@ public final class Result implements Serializable {
 
   private static final long serialVersionUID = -6359038623760039155L;
 
-  private final JsonNode subjectColumnPositions;
+  private final JsonNode subjectColumnsPositions;
 
   private final JsonNode headerAnnotations;
 
@@ -33,14 +33,14 @@ public final class Result implements Serializable {
   private final List<String> warnings;
 
   @JsonCreator
-  public Result(@JsonProperty("subjectColumnPositions") final JsonNode subjectColumnPositions,
+  public Result(@JsonProperty("subjectColumnsPositions") final JsonNode subjectColumnsPositions,
       @JsonProperty("headerAnnotations") final JsonNode headerAnnotations,
       @JsonProperty("cellAnnotations") final JsonNode cellAnnotations,
       @JsonProperty("columnRelationAnnotations") final JsonNode columnRelationAnnotations,
       @JsonProperty("statisticalAnnotations") final JsonNode statisticalAnnotations,
       @JsonProperty("columnProcessingAnnotations") final JsonNode columnProcessingAnnotations,
       @JsonProperty("warnings") final List<String> warnings) {
-    this.subjectColumnPositions = subjectColumnPositions;
+    this.subjectColumnsPositions = subjectColumnsPositions;
     this.headerAnnotations = headerAnnotations;
     this.cellAnnotations = cellAnnotations;
     this.columnRelationAnnotations = columnRelationAnnotations;
@@ -70,7 +70,7 @@ public final class Result implements Serializable {
   }
 
   public JsonNode getSubjectColumnPositions() {
-    return this.subjectColumnPositions;
+    return this.subjectColumnsPositions;
   }
 
   public List<String> getWarnings() {
